@@ -13,10 +13,16 @@ import (
 func main(){
 	router := gin.Default()
 
+	// versioning (http://localhost:8000/v1/)
+	v1 := router.Group("/v1")
+
 	// get methode
-	router.GET("/", rootHandler)
-	router.GET("/books/:id/:title", booksHandler)
-	router.GET("/query", queryHandler)
+
+	v1.GET("/", rootHandler)
+	v1.GET("/books/:id/:title", booksHandler)
+	v1.GET("/query", queryHandler)
+
+
 
 	// post methode
 	router.POST("/books", postBooksHandler)
@@ -60,18 +66,20 @@ func postBooksHandler(c *gin.Context){
 	err := c.ShouldBindJSON(&bookInput)
 	if err != nil {
 
+		errorMessages := []string{}
 		for _,e := range err.(validator.ValidationErrors){
 			errorMessage := fmt.Sprintf("err on field %s, condition: %s", e.Field(), e.ActualTag())
-			c.JSON(http.StatusBadRequest, gin.H{
-			"message" : errorMessage,
-		})
-		return
+			errorMessages = append(errorMessages, errorMessage)
 		}
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message" : errorMessages,
+		})
+	return
 		
-	}else{
+	}
 		c.JSON(http.StatusOK, gin.H{
 			"Title" : bookInput.Title,
 			"Price" : bookInput.Price,			
 		})
-	}
+	
 }
